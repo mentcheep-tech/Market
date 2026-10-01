@@ -1,0 +1,54 @@
+name: Build PolymarketClient APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  build-debug-apk:
+    name: Build Debug APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Show Java and Gradle versions
+        run: |
+          java -version
+          ./gradlew --version
+
+      - name: Build debug APK
+        run: ./gradlew :app:assembleDebug --stacktrace
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: PolymarketClient-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload mapping file if generated
+        uses: actions/upload-artifact@v4
+        with:
+          name: PolymarketClient-mapping
+          path: app/build/outputs/mapping/debug/**
+          if-no-files-found: ignore
+          retention-days: 14
